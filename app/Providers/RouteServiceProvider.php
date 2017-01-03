@@ -73,6 +73,7 @@ class RouteServiceProvider extends ServiceProvider
 
                 // Dashboard
                 $router->get('dashboard', 'DashboardController@index');
+                $router->get('dashboard/statistics', 'DashboardController@statistics');
 
                 // Auth
                 $router->get('logout', 'AuthController@logout');

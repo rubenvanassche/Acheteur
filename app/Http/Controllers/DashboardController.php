@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Configuration;
 use App\Product;
 use App\Shift;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Collection;
+
 
 class DashboardController extends AppController
 {
@@ -27,9 +30,19 @@ class DashboardController extends AppController
         $products = Product::where('event_id', Configuration::eventId())->get();
         $hasShifts = Configuration::event()->hasShifts();
 
-        dd(Configuration::event()->statistics());
 
-        return view('dashboard/index', compact('shifts', 'products', 'hasShifts'));
+
+
+
+        return view('dashboard/index', compact('shifts', 'products', 'hasShifts', 'statistics'));
+    }
+
+    public function statistics(){
+        $statistics = Configuration::event()->statistics();
+
+
+        return $statistics->toJSON();
+
     }
 
     /**

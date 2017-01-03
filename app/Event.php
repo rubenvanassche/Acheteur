@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\SluggableInterface;
 use Cviebrock\EloquentSluggable\SluggableTrait;
+use Illuminate\Support\Collection;
 
 class Event extends Model implements SluggableInterface {
 	protected $table = 'events';
@@ -73,7 +74,36 @@ class Event extends Model implements SluggableInterface {
 
 	// Returns an collection with as key the date and as value a list of keys(product_id) and values sold on that date
 	public function statistics(){
-		return Order::with('orderlists')->where('event_id', $this->id)->orderBy('created_at')->get();
+		$products = Product::where('event_id', Configuration::eventId())->get();
+
+		// Setup dates
+		$statistics =  Order::with('orderlists')->where('event_id', $this->id)->orderBy('created_at')->get();
+		$firstDate = $statistics->first()->created_at;
+		$lastDate = $statistics->last()->created_at;
+
+		// Get dates between firstdate and lastdate and put them in output
+		$output = new Collection();
+		for($date = $firstDate;$date->lte($lastDate);$date->addDay()){
+			// Get the product ID's and put them in an array
+			$data = new Collection();
+			foreach($products as $product){
+				$data->put($product->id, 0);
+			}
+
+			$output->put($date->format('d-m-Y'), $data);
+		}
+
+		// Add the amounts of products ordered from the orderlists
+		foreach($statistics as $order){
+			$date = $order->created_at->format('d-m-Y');
+			foreach($order->orderlists()->get() as $orderlist){
+				$output[$date][$orderlist->product_id] = $orderlist->amount;
+			}
+		}
+
+
+
+		return $output;
 	}
 
 }
